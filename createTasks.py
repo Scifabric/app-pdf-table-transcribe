@@ -65,6 +65,7 @@ if __name__ == "__main__":
     # PDF file pages
     parser.add_option("-p", "--pages-pdf",
                       dest="pdf_pages",
+                      type="int",
                       help="PDF File Pages",
                       metavar="PDF-FILE-PAGES")
 
@@ -88,6 +89,7 @@ if __name__ == "__main__":
     # (default 30)
     parser.add_option("-n", "--number-answers",
                       dest="n_answers",
+                      type="int",
                       help="Number of answers per task",
                       metavar="N-ANSWERS")
 
@@ -122,6 +124,11 @@ if __name__ == "__main__":
     if not options.pdf_pages:
         options.pdf_pages = 14
         print ("Using the number of pages of the default PDF file from Mozilla")
+    else:
+        print ("Using %s as number of pages" % (options.pdf_pages))
+
+    # Add one extra page, to use the full range of pages
+    options.pdf_pages += 1
 
     if (options.verbose):
         print('Running against PyBosssa instance at: %s' % options.api_url)
@@ -148,12 +155,13 @@ if __name__ == "__main__":
         try:
             response = pbclient.update_app(app)
             check_api_error(response)
-            for page in range(1, 15):
+            for page in range(1, options.pdf_pages):
                 # Data for the tasks
                 task_info = dict(question=app_config['question'],
                                  page=page,
                                  pdf_url=options.pdf_url)
-                response = pbclient.create_task(app.id, task_info)
+                response = pbclient.create_task(app.id, task_info,
+                                                n_answers=options.n_answers)
                 check_api_error(response)
         except:
             format_error("pbclient.update_app or pbclient.create_task", response)
@@ -169,7 +177,8 @@ if __name__ == "__main__":
                     task_info = dict(question="Transcribe the following page",
                                      page=page,
                                      pdf_url=options.pdf_url)
-                    response = pbclient.create_task(app.id, task_info)
+                    response = pbclient.create_task(app.id, task_info,
+                                                    n_answers=options.n_answers)
                     check_api_error(response)
             except:
                 format_error("pbclient.create_task", response)
